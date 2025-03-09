@@ -3,6 +3,7 @@ import mediapipe as mp
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
 
 # Initialize MediaPipe hands module
 mp_hands = mp.solutions.hands
@@ -33,6 +34,8 @@ start_time = None
 test_started = False
 test_completed = False
 results_displayed = False
+test_ready = False  # New flag to indicate ready for space key to start test
+graph_filename = ""  # Variable to store the graph filename
 
 # Variables for distance tracking
 distance_data = []  # List to store (time, distance) pairs
@@ -43,8 +46,7 @@ THUMB_TIP = mp_hands.HandLandmark.THUMB_TIP
 INDEX_FINGER_TIP = mp_hands.HandLandmark.INDEX_FINGER_TIP
 
 print("Camera started. Please show your hand.")
-print("Measuring tap speed with thumb and index finger for 15 seconds.")
-print("Show your hand to the camera to start the test.")
+print("Press SPACE key to start the 15-second measurement.")
 
 while True:
     success, image = cap.read()
@@ -79,11 +81,10 @@ while True:
                 mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
             )
             
-            # Start test if not already started
-            if not test_started and not test_completed:
-                start_time = current_time
-                test_started = True
-                print("Test started!")
+            # Mark test as ready when hand is detected
+            if not test_ready and not test_started and not test_completed:
+                test_ready = True
+                print("Hand detected. Press SPACE to start the test.")
             
             # Get thumb and index finger tip coordinates
             thumb_tip = hand_landmarks.landmark[THUMB_TIP]
@@ -124,6 +125,10 @@ while True:
             # Display distance between fingers
             distance_text = f"Distance: {distance:.1f}"
             cv2.putText(image, distance_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    else:
+        # If no hands detected and test not started, reset ready state
+        if not test_started and not test_completed:
+            test_ready = False
     
     # Calculate remaining time if test is in progress
     if test_started and not test_completed:
@@ -142,6 +147,10 @@ while True:
         if elapsed_time >= test_duration:
             test_completed = True
             print("\nTest completed!")
+            
+            # Generate timestamp for filename
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            graph_filename = f"finger_distance_graph_{timestamp}.png"
             
             # Calculate overall results
             overall_taps_per_second = finger_tap_count / test_duration
@@ -200,8 +209,8 @@ while True:
                            label='Tap Events', s=50)
                 plt.legend()
             
-            plt.savefig('finger_distance_graph.png')
-            print("Distance graph saved as 'finger_distance_graph.png'")
+            plt.savefig(graph_filename)
+            print(f"Distance graph saved as '{graph_filename}'")
             
             results_displayed = True
         
@@ -216,6 +225,10 @@ while True:
     # Display results after test completion
     if test_completed:
         if not results_displayed:
+            # Generate timestamp for filename
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            graph_filename = f"finger_distance_graph_{timestamp}.png"
+            
             # Calculate overall results
             overall_taps_per_second = finger_tap_count / test_duration
             
@@ -274,8 +287,8 @@ while True:
                            label='Tap Events', s=50)
                 plt.legend()
             
-            plt.savefig('finger_distance_graph.png')
-            print("Distance graph saved as 'finger_distance_graph.png'")
+            plt.savefig(graph_filename)
+            print(f"Distance graph saved as '{graph_filename}'")
             
             results_displayed = True
         
@@ -320,11 +333,14 @@ while True:
         
         # Restart test instructions
         cv2.putText(image, "Press 'r' to restart test", (10, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(image, "Graph saved as 'finger_distance_graph.png'", (10, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(image, f"Graph saved as '{graph_filename}'", (10, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     
     # Show instructions if test hasn't started
     if not test_started and not test_completed:
-        cv2.putText(image, "Show your hand to the camera", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        if test_ready:
+            cv2.putText(image, "Hand detected - Press SPACE to start the test", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        else:
+            cv2.putText(image, "Show your hand to the camera", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         cv2.putText(image, "Measuring tap speed with thumb and index finger for 15 seconds", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
     
     # Display result screen
@@ -334,6 +350,10 @@ while True:
     key = cv2.waitKey(5) & 0xFF
     if key == ord('q'):  # Press 'q' to quit
         break
+    elif key == ord(' ') and test_ready and not test_started and not test_completed:  # Press SPACE to start test
+        start_time = time.time()
+        test_started = True
+        print("Test started!")
     elif key == ord('r') and test_completed:  # Press 'r' to restart test
         finger_tap_count = 0
         tap_timestamps = []
@@ -342,8 +362,10 @@ while True:
         test_started = False
         test_completed = False
         results_displayed = False
+        test_ready = False
+        graph_filename = ""
         print("\nRestarting test.")
-        print("Show your hand to the camera.")
+        print("Show your hand to the camera and press SPACE to start.")
 
 # Release resources
 hands.close()
