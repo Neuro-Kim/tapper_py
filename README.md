@@ -1,5 +1,5 @@
 availCam.py : 여러대의 카메라가 있을 때 사용할 카메라가 몇번인지 확인하기 위한 작업
-
+camera_settings.json : 카메라 설정 파일
 fingertap_eng.py : 측정을 실행
 
 # 사용법
