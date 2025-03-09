@@ -8,15 +8,18 @@ from matplotlib.ticker import MaxNLocator
 import os
 import json
 
+# Define constant for camera settings file
+CAMERA_SETTINGS_FILE = 'camera_settings.json'
+
 # Function to load camera settings
 def load_camera_settings():
     # Default camera index
     default_camera = 0
     
     # Check if settings file exists
-    if os.path.exists('camera_settings.json'):
+    if os.path.exists(CAMERA_SETTINGS_FILE):
         try:
-            with open('camera_settings.json', 'r') as f:
+            with open(CAMERA_SETTINGS_FILE, 'r') as f:
                 settings = json.load(f)
                 return settings.get('camera_index', default_camera)
         except Exception as e:
@@ -27,7 +30,7 @@ def load_camera_settings():
 # Function to save camera settings
 def save_camera_settings(camera_index):
     try:
-        with open('camera_settings.json', 'w') as f:
+        with open(CAMERA_SETTINGS_FILE, 'w') as f:
             settings = {'camera_index': camera_index}
             json.dump(settings, f)
         print(f"Camera settings saved. Using camera index: {camera_index}")
