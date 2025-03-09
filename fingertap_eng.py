@@ -5,6 +5,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 from matplotlib.ticker import MaxNLocator
+import os
+import json
+
+# Function to load camera settings
+def load_camera_settings():
+    # Default camera index
+    default_camera = 0
+    
+    # Check if settings file exists
+    if os.path.exists('camera_settings.json'):
+        try:
+            with open('camera_settings.json', 'r') as f:
+                settings = json.load(f)
+                return settings.get('camera_index', default_camera)
+        except Exception as e:
+            print(f"Error loading camera settings: {e}")
+    
+    return default_camera
+
+# Function to save camera settings
+def save_camera_settings(camera_index):
+    try:
+        with open('camera_settings.json', 'w') as f:
+            settings = {'camera_index': camera_index}
+            json.dump(settings, f)
+        print(f"Camera settings saved. Using camera index: {camera_index}")
+    except Exception as e:
+        print(f"Error saving camera settings: {e}")
 
 # Initialize MediaPipe hands module
 mp_hands = mp.solutions.hands
@@ -16,13 +44,40 @@ hands = mp_hands.Hands(
 )
 mp_drawing = mp.solutions.drawing_utils
 
+# Load camera settings
+camera_index = load_camera_settings()
+print(f"Using camera index: {camera_index}")
+
 # Set up webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(camera_index)
+
+# Function to switch camera
+def switch_camera(current_index):
+    global cap
+    
+    # Release current camera
+    if cap is not None:
+        cap.release()
+    
+    # Try next camera (cycle through 0-3)
+    next_index = (current_index + 1) % 4
+    
+    # Try to open the next camera
+    cap = cv2.VideoCapture(next_index)
+    
+    # If successful, return the new index
+    if cap.isOpened():
+        save_camera_settings(next_index)
+        return next_index
+    else:
+        # If failed, recursively try the next one
+        print(f"Failed to open camera {next_index}, trying next...")
+        return switch_camera(next_index)
 
 # Check if camera opened successfully
 if not cap.isOpened():
-    print("Cannot open camera. Please check camera permissions.")
-    exit()
+    print("Failed to open the default camera. Trying to find an available camera...")
+    camera_index = switch_camera(camera_index)
 
 # Initialize tap detection variables
 finger_tap_count = 0
@@ -48,12 +103,15 @@ INDEX_FINGER_TIP = mp_hands.HandLandmark.INDEX_FINGER_TIP
 
 print("Camera started. Please show your hand.")
 print("Press SPACE key to start the 15-second measurement.")
+print("Press 'c' to cycle through available cameras.")
 
 while True:
     success, image = cap.read()
     if not success:
         print("Cannot read frame.")
-        break
+        # Try to switch to next camera automatically if current one fails
+        camera_index = switch_camera(camera_index)
+        continue
     
     # Flip the image horizontally (mirror effect)
     image = cv2.flip(image, 1)
@@ -390,6 +448,10 @@ while True:
             cv2.putText(image, "Show your hand to the camera", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         cv2.putText(image, "Measuring tap speed with thumb and index finger for 15 seconds", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
     
+    # Display camera information
+    camera_info = f"Camera: {camera_index} (Press 'c' to switch camera)"
+    cv2.putText(image, camera_info, (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    
     # Display result screen
     cv2.imshow('Finger Tap Speed Test - 15 seconds', image)
     
@@ -413,6 +475,11 @@ while True:
         graph_filename = ""
         print("\nRestarting test.")
         print("Show your hand to the camera and press SPACE to start.")
+    elif key == ord('c') and not test_started:  # Press 'c' to cycle through cameras
+        print("\nSwitching camera...")
+        camera_index = switch_camera(camera_index)
+        # Reset test readiness when switching camera
+        test_ready = False
 
 # Release resources
 hands.close()
