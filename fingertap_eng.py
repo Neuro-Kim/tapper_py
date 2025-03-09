@@ -344,9 +344,9 @@ while True:
                 # For each tap, find the corresponding distance value
                 tap_distances = []
                 for tap_time in tap_times:
-                    # Find the closest timestamp
+                    # Fixed lambda function - using a default parameter to capture the current value
                     closest_idx = min(range(len(distance_timestamps)), 
-                                      key=lambda i: abs(distance_timestamps[i] - tap_time))
+                                      key=lambda i, current_time=tap_time: abs(distance_timestamps[i] - current_time))
                     if closest_idx < len(distance_data):
                         tap_distances.append(distance_data[closest_idx])
                     else:
