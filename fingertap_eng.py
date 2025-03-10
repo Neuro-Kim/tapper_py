@@ -7,6 +7,13 @@ import datetime
 from matplotlib.ticker import MaxNLocator
 import os
 import json
+import telepot
+
+# Load Telegram configuration
+with open('telegram_config.json', 'r') as config_file:
+    config = json.load(config_file)
+    TOKEN = config['TOKEN']
+    CHAT_ID = config['CHAT_ID']
 
 # Define constant for camera settings file
 CAMERA_SETTINGS_FILE = 'camera_settings.json'
@@ -82,7 +89,8 @@ if not cap.isOpened():
     print("Failed to open the default camera. Trying to find an available camera...")
     camera_index = switch_camera(camera_index)
 
-# Initialize tap detection variables
+bot = telepot.Bot(TOKEN)
+
 finger_tap_count = 0
 is_tapping = False
 prev_tapping_state = False
@@ -381,6 +389,10 @@ while True:
             plt.tight_layout(rect=[0, 0.08, 1, 0.95])  # Adjust to make room for the stats at the bottom
             plt.savefig(graph_filename, dpi=300)
             print(f"Distance graph saved as '{graph_filename}'")
+            # Send the graph to Telegram
+            with open(graph_filename, 'rb') as photo:
+                bot.sendPhoto(CHAT_ID, photo)
+            print(f"Graph sent to Telegram chat ID {CHAT_ID}")
             
             results_displayed = True
         
