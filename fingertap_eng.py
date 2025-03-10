@@ -320,7 +320,7 @@ while True:
             
             # Set figure title and subtitle
             plt.suptitle('Fingertap Analysis', fontsize=16, fontweight='bold')
-            plt.title(f'Test Time: {timestamp_str}', fontsize=10)
+            plt.title(f'Test Time: {timestamp_str}', fontsize=16)
             
             # First axis for tap rate and finger distance
             ax1.set_xlabel('Time (seconds)')
@@ -368,11 +368,11 @@ while True:
             
             # Add tap rate segment averages and change info as text
             tap_info = f"Tap Rate (5s segments): {segment_rates[0]:.1f} - {segment_rates[1]:.1f} - {segment_rates[2]:.1f} taps/s, Change: {tap_change_percentage:.1f}%"
-            fig.text(0.5, 0.02, tap_info, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+            fig.text(0.5, 0.02, tap_info, ha='center', fontsize=16)
             
             # Add distance segment averages and change info as text
             distance_info = f"Avg Distance (5s segments): {segment_avg_distances[0]:.1f} - {segment_avg_distances[1]:.1f} - {segment_avg_distances[2]:.1f}, Change: {distance_change_percentage:.1f}%"
-            fig.text(0.5, 0.05, distance_info, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8))
+            fig.text(0.5, 0.05, distance_info, ha='center', fontsize=16)
             
             # Add grid
             ax1.grid(True, alpha=0.3)
