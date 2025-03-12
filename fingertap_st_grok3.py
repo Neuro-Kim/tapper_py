@@ -56,16 +56,21 @@ mp_drawing = mp.solutions.drawing_utils
 st.title("Finger Tap Speed Test - 15 Seconds")
 st.write("Measure your finger tapping speed using your webcam!")
 
-# Load camera settings
-camera_index = load_camera_settings()
-st.write(f"Using camera index: {camera_index}")
+# Sidebar for camera selection and distance threshold
+st.sidebar.title("Settings")
+camera_index = st.sidebar.selectbox("Select Camera", [0, 1, 2], index=load_camera_settings())
+distance_threshold = st.sidebar.slider("Tip Distance Threshold", 0, 100, 100)  # Default to 100
+
+# Save selected camera index
+if st.sidebar.button("Save Camera Selection"):
+    save_camera_settings(camera_index)
 
 # Webcam setup
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(camera_index)
 
 # Check if camera opened successfully
 if not cap.isOpened():
-    st.error("Failed to open the default camera. Please check your webcam.")
+    st.error(f"Failed to open camera index {camera_index}. Please check your webcam.")
     st.stop()
 
 # State management using session state
@@ -143,7 +148,7 @@ def process_frame():
                     st.session_state.distance_data.append(distance)
                     st.session_state.distance_timestamps.append(elapsed)
 
-            st.session_state.is_tapping = distance < 100
+            st.session_state.is_tapping = distance < distance_threshold  # Use adjustable threshold
             if (st.session_state.is_tapping and not st.session_state.prev_tapping_state and 
                 st.session_state.test_started and not st.session_state.test_completed):
                 st.session_state.finger_tap_count += 1
