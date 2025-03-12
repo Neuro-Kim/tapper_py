@@ -141,7 +141,7 @@ def process_frame():
 
             thumb_tip = hand_landmarks.landmark[THUMB_TIP]
             index_tip = hand_landmarks.landmark[INDEX_FINGER_TIP]
-            h, w, c = image.shape
+            h, w, _ = image.shape
             thumb_x, thumb_y = int(thumb_tip.x * w), int(thumb_tip.y * h)
             index_x, index_y = int(index_tip.x * w), int(index_tip.y * h)
 
@@ -221,7 +221,7 @@ def display_results():
     st.write(f"Distance change (first to last): {distance_change_percentage:.1f}%")
 
     # Generate final graph
-    fig, ax1 = plt.subplots(figsize=(12, 8))
+    _, ax1 = plt.subplots(figsize=(12, 8))
     plt.suptitle('Fingertap Analysis', fontsize=16, fontweight='bold')
     plt.title(f'Test Time: {timestamp_str}', fontsize=16)
     ax1.set_xlabel('Time (seconds)', fontsize=16)
@@ -243,7 +243,7 @@ def display_results():
     # Plot tap events as green dots
     tap_times = [t - st.session_state.start_time for t in st.session_state.tap_timestamps]
     tap_distances = [st.session_state.distance_data[min(range(len(st.session_state.distance_timestamps)), 
-             key=lambda i: abs(st.session_state.distance_timestamps[i] - t))] for t in tap_times]
+             key=lambda i, t=t: abs(st.session_state.distance_timestamps[i] - t))] for t in tap_times]
     ax1.scatter(tap_times, tap_distances, color='green', label='Tap Events', s=50, alpha=0.7)
 
     # Calculate and plot 2-second tap rate with red line
