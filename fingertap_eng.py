@@ -305,15 +305,19 @@ while True:
                 else:
                     two_sec_avg_distances.append(0)
             
-            # Display results
-            print(f"Total taps in 15 seconds: {finger_tap_count}")
-            print(f"Overall average tap rate: {overall_taps_per_second:.2f} taps/second")
-            print(f"First 5 seconds tap rate: {segment_rates[0]:.2f} taps/second ({segment_counts[0]} taps)")
-            print(f"Middle 5 seconds tap rate: {segment_rates[1]:.2f} taps/second ({segment_counts[1]} taps)")
-            print(f"Last 5 seconds tap rate: {segment_rates[2]:.2f} taps/second ({segment_counts[2]} taps)")
-            print(f"Speed change from first to last 5 seconds: {tap_change_percentage:.1f}%")
-            print(f"Average distances for 5-second segments: {[f'{d:.1f}' for d in segment_avg_distances]}")
-            print(f"Distance change from first to last 5 seconds: {distance_change_percentage:.1f}%")
+            # Prepare results as text
+            results_text = f"Test completed!\n"
+            results_text += f"Total taps in 15 seconds: {finger_tap_count}\n"
+            results_text += f"Overall average tap rate: {overall_taps_per_second:.2f} taps/second\n"
+            results_text += f"First 5 seconds tap rate: {segment_rates[0]:.2f} taps/second ({segment_counts[0]} taps)\n"
+            results_text += f"Middle 5 seconds tap rate: {segment_rates[1]:.2f} taps/second ({segment_counts[1]} taps)\n"
+            results_text += f"Last 5 seconds tap rate: {segment_rates[2]:.2f} taps/second ({segment_counts[2]} taps)\n"
+            results_text += f"Speed change from first to last 5 seconds: {tap_change_percentage:.1f}%\n"
+            results_text += f"Average distances for 5-second segments: {[f'{d:.1f}' for d in segment_avg_distances]}\n"
+            results_text += f"Distance change from first to last 5 seconds: {distance_change_percentage:.1f}%\n"
+            
+            # Display results in console
+            print(results_text)
             
             # Create a figure with two y-axes
             fig, ax1 = plt.subplots(figsize=(12, 8))
@@ -389,10 +393,19 @@ while True:
             plt.tight_layout(rect=[0, 0.08, 1, 0.95])  # Adjust to make room for the stats at the bottom
             plt.savefig(graph_filename, dpi=300)
             print(f"Distance graph saved as '{graph_filename}'")
-            # Send the graph to Telegram
-            with open(graph_filename, 'rb') as photo:
-                bot.sendPhoto(CHAT_ID, photo)
-            print(f"Graph sent to Telegram chat ID {CHAT_ID}")
+            
+            # Send the graph and results to Telegram
+            try:
+                # First send text results
+                bot.sendMessage(CHAT_ID, results_text)
+                print("Test results sent to Telegram")
+                
+                # Then send the graph
+                with open(graph_filename, 'rb') as photo:
+                    bot.sendPhoto(CHAT_ID, photo)
+                print(f"Graph sent to Telegram chat ID {CHAT_ID}")
+            except Exception as e:
+                print(f"Error sending to Telegram: {e}")
             
             results_displayed = True
         
